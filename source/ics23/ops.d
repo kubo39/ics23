@@ -1,7 +1,10 @@
 module ics23.ops;
 
+import std.array : array;
 import std.digest.ripemd;
 import std.digest.sha;
+
+import google.protobuf.encoding;
 
 import ics23.helper;
 import ics23.proofs;
@@ -96,6 +99,8 @@ Hash doLength(LengthOp length, const(ubyte)[] data)
     case LengthOp.NO_PREFIX:
         return cast(ubyte[]) data;
     case LengthOp.VAR_PROTO:
+        auto len = data.length.toProtobuf.array;
+        return len ~ data;
     case LengthOp.VAR_RLP:
     case LengthOp.FIXED32_BIG:
     case LengthOp.FIXED32_LITTLE:
@@ -110,6 +115,12 @@ Hash doLength(LengthOp length, const(ubyte)[] data)
 unittest
 {
     import std.digest;
-    auto prefixed = doLength(LengthOp.NO_PREFIX, "food");
-    assert(prefixed.toHexString!(LetterCase.lower) == "666f6f64");
+    {
+        auto prefixed = doLength(LengthOp.NO_PREFIX, "food");
+        assert(prefixed.toHexString!(LetterCase.lower) == "666f6f64");
+    }
+    {
+        auto prefixed = doLength(LengthOp.VAR_PROTO, "food");
+        assert(prefixed.toHexString!(LetterCase.lower) == "04666f6f64");
+    }
 }
