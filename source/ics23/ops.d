@@ -47,7 +47,7 @@ Hash doHash(HashOp hash, const(ubyte)[] data)
     final switch (hash)
     {
     case HashOp.NO_HASH:
-        return  cast(ubyte[]) data;
+        return cast(ubyte[]) data;
     case HashOp.SHA256:
         return sha256Of(data).dup;
     case HashOp.SHA512:
@@ -101,13 +101,17 @@ Hash doLength(LengthOp length, const(ubyte)[] data)
     case LengthOp.VAR_PROTO:
         auto len = data.length.toProtobuf.array;
         return len ~ data;
+    case LengthOp.REQUIRE_32_BYTES:
+        assert(data.length == 32);
+        return cast(ubyte[]) data;
+    case LengthOp.REQUIRE_64_BYTES:
+        assert(data.length == 64);
+        return cast(ubyte[]) data;
     case LengthOp.VAR_RLP:
     case LengthOp.FIXED32_BIG:
     case LengthOp.FIXED32_LITTLE:
     case LengthOp.FIXED64_BIG:
     case LengthOp.FIXED64_LITTLE:
-    case LengthOp.REQUIRE_32_BYTES:
-    case LengthOp.REQUIRE_64_BYTES:
         assert(false, "Unsupported length.");
     }
 }
