@@ -4,6 +4,7 @@ import std.array : array;
 import std.digest.ripemd;
 import std.digest.sha;
 
+import google.protobuf.common;
 import google.protobuf.encoding;
 
 import ics23.helper;
@@ -23,6 +24,20 @@ Hash applyInner(InnerOp inner, const(ubyte)[] child)
     return doHash(inner.hash, image);
 }
 
+unittest
+{
+    import std.conv : hexString;
+    {
+        auto inner = new InnerOp;
+        inner.hash = HashOp.SHA256;
+        inner.prefix = cast(bytes) hexString!"0123456789";
+        inner.suffix = cast(bytes) hexString!"deadbeef";
+        const child = hexString!"00cafe00";
+        auto expected = applyInner(inner, child);
+        assert(expected == hexString!"0339f76086684506a6d42a60da4b5a719febd4d96d8b8d85ae92849e3a849a5e");
+    }
+}
+
 Hash applyLeaf(LeafOp leaf, const(char)[] key, const(char)[] value)
 {
     return applyLeaf(leaf, cast(const(ubyte)[]) key, cast(const(ubyte)[]) value);
@@ -40,7 +55,7 @@ Hash applyLeaf(LeafOp leaf, const(ubyte)[] key, const(ubyte)[] value)
 
 unittest
 {
-    import std.digest;
+    import std.conv : hexString;
 
     {
         auto leaf = new LeafOp;
@@ -48,8 +63,8 @@ unittest
         leaf.prehashKey = HashOp.NO_HASH;
         leaf.prehashValue = HashOp.NO_HASH;
         leaf.length = LengthOp.NO_PREFIX;
-        auto hash = applyLeaf(leaf, "foo", "bar");
-        assert(hash.toHexString!(LetterCase.lower) == "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2");
+        auto expected = applyLeaf(leaf, "foo", "bar");
+        assert(expected == hexString!"c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2");
     }
     {
         auto leaf = new LeafOp;
@@ -57,8 +72,8 @@ unittest
         leaf.prehashKey = HashOp.NO_HASH;
         leaf.prehashValue = HashOp.NO_HASH;
         leaf.length = LengthOp.NO_PREFIX;
-        auto hash = applyLeaf(leaf, "f", "oobaz");
-        assert(hash.toHexString!(LetterCase.lower) == "4f79f191298ec7461d60136c60f77c2ae8ddd85dbf6168bb925092d51bfb39b559219b39ae5385ba04946c87f64741385bef90578ea6fe6dac85dbf7ad3f79e1");
+        auto expected = applyLeaf(leaf, "f", "oobaz");
+        assert(expected == hexString!"4f79f191298ec7461d60136c60f77c2ae8ddd85dbf6168bb925092d51bfb39b559219b39ae5385ba04946c87f64741385bef90578ea6fe6dac85dbf7ad3f79e1");
     }
     {
         auto leaf = new LeafOp;
@@ -66,8 +81,8 @@ unittest
         leaf.prehashKey = HashOp.NO_HASH;
         leaf.prehashValue = HashOp.NO_HASH;
         leaf.length = LengthOp.VAR_PROTO;
-        auto hash = applyLeaf(leaf, "food", "some longer text");
-        assert(hash.toHexString!(LetterCase.lower) == "b68f5d298e915ae1753dd333da1f9cf605411a5f2e12516be6758f365e6db265");
+        auto expected = applyLeaf(leaf, "food", "some longer text");
+        assert(expected == hexString!"b68f5d298e915ae1753dd333da1f9cf605411a5f2e12516be6758f365e6db265");
     }
     {
         auto leaf = new LeafOp;
@@ -75,8 +90,8 @@ unittest
         leaf.prehashKey = HashOp.NO_HASH;
         leaf.prehashValue = HashOp.SHA256;
         leaf.length = LengthOp.VAR_PROTO;
-        auto hash = applyLeaf(leaf, "food", "yet another long string");
-        assert(hash.toHexString!(LetterCase.lower) == "87e0483e8fb624aef2e2f7b13f4166cda485baa8e39f437c83d74c94bedb148f");
+        auto expected = applyLeaf(leaf, "food", "yet another long string");
+        assert(expected == hexString!"87e0483e8fb624aef2e2f7b13f4166cda485baa8e39f437c83d74c94bedb148f");
     }
 }
 
@@ -116,26 +131,26 @@ Hash doHash(HashOp hash, const(ubyte)[] data)
 
 unittest
 {
-    import std.digest;
+    import std.conv : hexString;
     {
         auto hash = doHash(HashOp.NO_HASH, "food");
-        assert(hash.toHexString!(LetterCase.lower) == "666f6f64");
+        assert(hash == hexString!"666f6f64");
     }
     {
         auto hash = doHash(HashOp.SHA256, "food");
-        assert(hash.toHexString!(LetterCase.lower) == "c1f026582fe6e8cb620d0c85a72fe421ddded756662a8ec00ed4c297ad10676b");
+        assert(hash == hexString!"c1f026582fe6e8cb620d0c85a72fe421ddded756662a8ec00ed4c297ad10676b");
     }
     {
         auto hash = doHash(HashOp.SHA512, "food");
-        assert(hash.toHexString!(LetterCase.lower) == "c235548cfe84fc87678ff04c9134e060cdcd7512d09ed726192151a995541ed8db9fda5204e72e7ac268214c322c17787c70530513c59faede52b7dd9ce64331");
+        assert(hash == hexString!"c235548cfe84fc87678ff04c9134e060cdcd7512d09ed726192151a995541ed8db9fda5204e72e7ac268214c322c17787c70530513c59faede52b7dd9ce64331");
     }
     {
         auto hash = doHash(HashOp.RIPEMD160, "food");
-        assert(hash.toHexString!(LetterCase.lower) == "b1ab9988c7c7c5ec4b2b291adfeeee10e77cdd46");
+        assert(hash == hexString!"b1ab9988c7c7c5ec4b2b291adfeeee10e77cdd46");
     }
     {
         auto hash = doHash(HashOp.BITCOIN, "food");
-        assert(hash.toHexString!(LetterCase.lower) == "0bcb587dfb4fc10b36d57f2bba1878f139b75d24");
+        assert(hash == hexString!"0bcb587dfb4fc10b36d57f2bba1878f139b75d24");
     }
 }
 
@@ -173,17 +188,17 @@ Hash doLength(LengthOp length, const(ubyte)[] data)
 
 unittest
 {
-    import std.digest;
+    import std.conv : hexString;
     {
         auto prefixed = doLength(LengthOp.NO_PREFIX, "food");
-        assert(prefixed.toHexString!(LetterCase.lower) == "666f6f64");
+        assert(prefixed == hexString!"666f6f64");
     }
     {
         auto prefixed = doLength(LengthOp.VAR_PROTO, "food");
-        assert(prefixed.toHexString!(LetterCase.lower) == "04666f6f64");
+        assert(prefixed == hexString!"04666f6f64");
     }
     {
         auto prefixed = doLength(LengthOp.FIXED32_LITTLE, "food");
-        assert(prefixed.toHexString!(LetterCase.lower) == "04000000666f6f64");
+        assert(prefixed == hexString!"04000000666f6f64");
     }
 }
