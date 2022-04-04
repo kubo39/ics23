@@ -1,0 +1,17 @@
+.dub
+docs.json
+__dummy.html
+docs/
+dub.selections.json
+/ics23
+ics23.so
+ics23.dylib
+ics23.dll
+ics23.a
+ics23.lib
+ics23-test-*
+libics23.a
+*.exe
+*.o
+*.obj
+*.lst
