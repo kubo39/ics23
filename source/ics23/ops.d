@@ -42,13 +42,42 @@ unittest
 {
     import std.digest;
 
-    auto leaf = new LeafOp;
-    leaf.hash = HashOp.SHA256;
-    leaf.prehashKey = HashOp.NO_HASH;
-    leaf.prehashValue = HashOp.NO_HASH;
-    leaf.length = LengthOp.NO_PREFIX;
-    auto hash = applyLeaf(leaf, "foo", "bar");
-    assert(hash.toHexString!(LetterCase.lower) == "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2");
+    {
+        auto leaf = new LeafOp;
+        leaf.hash = HashOp.SHA256;
+        leaf.prehashKey = HashOp.NO_HASH;
+        leaf.prehashValue = HashOp.NO_HASH;
+        leaf.length = LengthOp.NO_PREFIX;
+        auto hash = applyLeaf(leaf, "foo", "bar");
+        assert(hash.toHexString!(LetterCase.lower) == "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2");
+    }
+    {
+        auto leaf = new LeafOp;
+        leaf.hash = HashOp.SHA512;
+        leaf.prehashKey = HashOp.NO_HASH;
+        leaf.prehashValue = HashOp.NO_HASH;
+        leaf.length = LengthOp.NO_PREFIX;
+        auto hash = applyLeaf(leaf, "f", "oobaz");
+        assert(hash.toHexString!(LetterCase.lower) == "4f79f191298ec7461d60136c60f77c2ae8ddd85dbf6168bb925092d51bfb39b559219b39ae5385ba04946c87f64741385bef90578ea6fe6dac85dbf7ad3f79e1");
+    }
+    {
+        auto leaf = new LeafOp;
+        leaf.hash = HashOp.SHA256;
+        leaf.prehashKey = HashOp.NO_HASH;
+        leaf.prehashValue = HashOp.NO_HASH;
+        leaf.length = LengthOp.VAR_PROTO;
+        auto hash = applyLeaf(leaf, "food", "some longer text");
+        assert(hash.toHexString!(LetterCase.lower) == "b68f5d298e915ae1753dd333da1f9cf605411a5f2e12516be6758f365e6db265");
+    }
+    {
+        auto leaf = new LeafOp;
+        leaf.hash = HashOp.SHA256;
+        leaf.prehashKey = HashOp.NO_HASH;
+        leaf.prehashValue = HashOp.SHA256;
+        leaf.length = LengthOp.VAR_PROTO;
+        auto hash = applyLeaf(leaf, "food", "yet another long string");
+        assert(hash.toHexString!(LetterCase.lower) == "87e0483e8fb624aef2e2f7b13f4166cda485baa8e39f437c83d74c94bedb148f");
+    }
 }
 
 private:
