@@ -36,6 +36,14 @@ unittest
         auto expected = applyInner(inner, child);
         assert(expected == hexString!"0339f76086684506a6d42a60da4b5a719febd4d96d8b8d85ae92849e3a849a5e");
     }
+    {
+        auto inner = new InnerOp;
+        inner.hash = HashOp.SHA256;
+        inner.prefix = cast(bytes) hexString!"00204080a0c0e0";
+        const child = hexString!"ffccbb997755331100";
+        auto expected = applyInner(inner, child);
+        assert(expected == hexString!"45bece1678cf2e9f4f2ae033e546fc35a2081b2415edcb13121a0e908dca1927");
+    }
 }
 
 Hash applyLeaf(LeafOp leaf, const(char)[] key, const(char)[] value)
