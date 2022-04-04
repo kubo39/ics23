@@ -9,6 +9,11 @@ import google.protobuf.encoding;
 import ics23.helper;
 import ics23.proofs;
 
+Hash applyInner(InnerOp inner, const(char)[] child)
+{
+    return applyInner(inner, cast(const(ubyte)[]) child);
+}
+
 Hash applyInner(InnerOp inner, const(ubyte)[] child)
 {
     assert(child.length);
@@ -16,6 +21,11 @@ Hash applyInner(InnerOp inner, const(ubyte)[] child)
     image ~= child;
     image ~= inner.suffix;
     return doHash(inner.hash, image);
+}
+
+Hash applyLeaf(LeafOp leaf, const(char)[] key, const(char)[] value)
+{
+    return applyLeaf(leaf, cast(const(ubyte)[]) key, cast(const(ubyte)[]) value);
 }
 
 Hash applyLeaf(LeafOp leaf, const(ubyte)[] key, const(ubyte)[] value)
@@ -26,6 +36,19 @@ Hash applyLeaf(LeafOp leaf, const(ubyte)[] key, const(ubyte)[] value)
     const preval = prepareLeafData(leaf.prehashValue, leaf.length, value);
     hash ~= preval;
     return doHash(leaf.hash, hash);
+}
+
+unittest
+{
+    import std.digest;
+
+    auto leaf = new LeafOp;
+    leaf.hash = HashOp.SHA256;
+    leaf.prehashKey = HashOp.NO_HASH;
+    leaf.prehashValue = HashOp.NO_HASH;
+    leaf.length = LengthOp.NO_PREFIX;
+    auto hash = applyLeaf(leaf, "foo", "bar");
+    assert(hash.toHexString!(LetterCase.lower) == "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2");
 }
 
 private:
