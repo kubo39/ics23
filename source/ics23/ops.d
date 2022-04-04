@@ -107,9 +107,12 @@ Hash doLength(LengthOp length, const(ubyte)[] data)
     case LengthOp.REQUIRE_64_BYTES:
         assert(data.length == 64);
         return cast(ubyte[]) data;
+    case LengthOp.FIXED32_LITTLE:
+        import std.bitmanip;
+        auto len = nativeToLittleEndian(cast(uint) data.length);
+        return len ~ data;
     case LengthOp.VAR_RLP:
     case LengthOp.FIXED32_BIG:
-    case LengthOp.FIXED32_LITTLE:
     case LengthOp.FIXED64_BIG:
     case LengthOp.FIXED64_LITTLE:
         assert(false, "Unsupported length.");
@@ -126,5 +129,9 @@ unittest
     {
         auto prefixed = doLength(LengthOp.VAR_PROTO, "food");
         assert(prefixed.toHexString!(LetterCase.lower) == "04666f6f64");
+    }
+    {
+        auto prefixed = doLength(LengthOp.FIXED32_LITTLE, "food");
+        assert(prefixed.toHexString!(LetterCase.lower) == "04000000666f6f64");
     }
 }
