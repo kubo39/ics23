@@ -3,6 +3,7 @@ module ics23.ops;
 import std.array : array;
 import std.digest.ripemd;
 import std.digest.sha;
+import std.exception : enforce;
 
 import google.protobuf.common;
 import google.protobuf.encoding;
@@ -17,7 +18,7 @@ Hash applyInner(InnerOp inner, const(char)[] child)
 
 Hash applyInner(InnerOp inner, const(ubyte)[] child)
 {
-    assert(child.length);
+    enforce(child.length, "Missing child hash");
     auto image = inner.prefix;
     image ~= child;
     image ~= inner.suffix;
@@ -107,7 +108,7 @@ private:
 
 Hash prepareLeafData(HashOp prehash, LengthOp length, const(ubyte)[] data)
 {
-    assert(data.length);
+    enforce(data.length, "Input to prepare data leaf missing");
     auto h = doHash(prehash, data);
     return doLength(length, h);
 }
@@ -177,10 +178,10 @@ Hash doLength(LengthOp length, const(ubyte)[] data)
         auto len = data.length.toProtobuf.array;
         return len ~ data;
     case LengthOp.REQUIRE_32_BYTES:
-        assert(data.length == 32);
+        enforce(data.length == 32, "Invalid length");
         return cast(ubyte[]) data;
     case LengthOp.REQUIRE_64_BYTES:
-        assert(data.length == 64);
+        enforce(data.length == 64, "Invalid length");
         return cast(ubyte[]) data;
     case LengthOp.FIXED32_LITTLE:
         import std.bitmanip;
