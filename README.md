@@ -11,3 +11,9 @@ Get protoc-compiler and `protoc-gen-d` from [https://github.com/dcarp/protobuf-d
 ```console
 protoc --plugin=protoc-gen-d --d_out=./source --proto_path=./ proofs.proto
 ```
+
+## Test
+
+```console
+dub test
+```
