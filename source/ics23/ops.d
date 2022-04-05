@@ -33,16 +33,16 @@ unittest
         inner.prefix = cast(bytes) hexString!"0123456789";
         inner.suffix = cast(bytes) hexString!"deadbeef";
         const child = hexString!"00cafe00";
-        auto expected = applyInner(inner, child);
-        assert(expected == hexString!"0339f76086684506a6d42a60da4b5a719febd4d96d8b8d85ae92849e3a849a5e");
+        auto expected = hexString!"0339f76086684506a6d42a60da4b5a719febd4d96d8b8d85ae92849e3a849a5e";
+        assert(expected == applyInner(inner, child));
     }
     {
         auto inner = new InnerOp;
         inner.hash = HashOp.SHA256;
         inner.prefix = cast(bytes) hexString!"00204080a0c0e0";
         const child = hexString!"ffccbb997755331100";
-        auto expected = applyInner(inner, child);
-        assert(expected == hexString!"45bece1678cf2e9f4f2ae033e546fc35a2081b2415edcb13121a0e908dca1927");
+        auto expected = hexString!"45bece1678cf2e9f4f2ae033e546fc35a2081b2415edcb13121a0e908dca1927";
+        assert(expected == applyInner(inner, child));
     }
 }
 
@@ -71,8 +71,8 @@ unittest
         leaf.prehashKey = HashOp.NO_HASH;
         leaf.prehashValue = HashOp.NO_HASH;
         leaf.length = LengthOp.NO_PREFIX;
-        auto expected = applyLeaf(leaf, "foo", "bar");
-        assert(expected == hexString!"c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2");
+        auto expected = hexString!"c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2";
+        assert(expected == applyLeaf(leaf, "foo", "bar"));
     }
     {
         auto leaf = new LeafOp;
@@ -80,8 +80,8 @@ unittest
         leaf.prehashKey = HashOp.NO_HASH;
         leaf.prehashValue = HashOp.NO_HASH;
         leaf.length = LengthOp.NO_PREFIX;
-        auto expected = applyLeaf(leaf, "f", "oobaz");
-        assert(expected == hexString!"4f79f191298ec7461d60136c60f77c2ae8ddd85dbf6168bb925092d51bfb39b559219b39ae5385ba04946c87f64741385bef90578ea6fe6dac85dbf7ad3f79e1");
+        auto expected = hexString!"4f79f191298ec7461d60136c60f77c2ae8ddd85dbf6168bb925092d51bfb39b559219b39ae5385ba04946c87f64741385bef90578ea6fe6dac85dbf7ad3f79e1";
+        assert(expected == applyLeaf(leaf, "f", "oobaz"));
     }
     {
         auto leaf = new LeafOp;
@@ -89,8 +89,8 @@ unittest
         leaf.prehashKey = HashOp.NO_HASH;
         leaf.prehashValue = HashOp.NO_HASH;
         leaf.length = LengthOp.VAR_PROTO;
-        auto expected = applyLeaf(leaf, "food", "some longer text");
-        assert(expected == hexString!"b68f5d298e915ae1753dd333da1f9cf605411a5f2e12516be6758f365e6db265");
+        auto expected = hexString!"b68f5d298e915ae1753dd333da1f9cf605411a5f2e12516be6758f365e6db265";
+        assert(expected == applyLeaf(leaf, "food", "some longer text"));
     }
     {
         auto leaf = new LeafOp;
@@ -98,8 +98,8 @@ unittest
         leaf.prehashKey = HashOp.NO_HASH;
         leaf.prehashValue = HashOp.SHA256;
         leaf.length = LengthOp.VAR_PROTO;
-        auto expected = applyLeaf(leaf, "food", "yet another long string");
-        assert(expected == hexString!"87e0483e8fb624aef2e2f7b13f4166cda485baa8e39f437c83d74c94bedb148f");
+        auto expected = hexString!"87e0483e8fb624aef2e2f7b13f4166cda485baa8e39f437c83d74c94bedb148f";
+        assert(expected == applyLeaf(leaf, "food", "yet another long string"));
     }
 }
 
