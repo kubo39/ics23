@@ -25,6 +25,48 @@ void verifyExistence(
     enforce(calc == root, "Root hash dosen't match");
 }
 
+void verifyNonExistence(
+    NonExistenceProof proof,
+    ProofSpec spec,
+    ubyte[] root,
+    ubyte[] key) @trusted
+{
+    if (proof.left !is null)
+    {
+        verifyExistence(proof.left, spec, root, proof.left.key, proof.left.value);
+        enforce(key > proof.left.key, "left key isn't before key");
+    }
+    if (proof.right !is null)
+    {
+        verifyExistence(proof.right, spec, root, proof.right.key, proof.right.value);
+        enforce(key > proof.right.key, "right key isn't before key");
+    }
+    enforce(spec.innerSpec !is null, "Inner spec missing");
+
+    if (proof.left !is null)
+    {
+        if (proof.right !is null)
+        {
+            ensureLeftNeighbor(spec.innerSpec, proof.left.path, proof.right.path);
+        }
+        else
+        {
+            ensureRightMost(spec.innerSpec, proof.left.path);
+        }
+    }
+    else
+    {
+        if (proof.right !is null)
+        {
+            ensureLeftMost(spec.innerSpec, proof.right.path);
+        }
+        else
+        {
+            enforce(false, "neither left nor right proof defined");
+        }
+    }
+}
+
 // Calculate determines the root hash that matches the given proof.
 CommitmentRoot calculateExistenceRoot(ExistenceProof proof) @trusted
 {
@@ -216,4 +258,155 @@ void ensureInner(InnerOp inner, ProofSpec spec) pure @safe
     enforce(inner.prefix.length >= spec.innerSpec.minPrefixLength, format!"inner prefix too short: %s"(inner.prefix.length));
     const maxLeftChildBytes = (spec.innerSpec.childOrder.length) - 1 * spec.innerSpec.childSize;
     enforce(inner.prefix.length <= (spec.innerSpec.maxPrefixLength + maxLeftChildBytes), format!"Inner prefix too short: %s"(inner.prefix.length));
+}
+
+void ensureLeftMost(InnerSpec spec, InnerOp[] path)
+{
+    const pad = getPadding(spec, 0);
+    foreach (step; path)
+    {
+        if (!hasPadding(step, pad) && !leftBranchesAreEmpty(spec, step))
+            enforce(false, "step not leftmost");
+    }
+}
+
+void ensureRightMost(InnerSpec spec, InnerOp[] path)
+{
+    const idx = cast(int) spec.childOrder.length - 1;
+    const pad = getPadding(spec, idx);
+    foreach (step; path)
+    {
+        if (!hasPadding(step, pad) && !rightBranchesAreEmpty(spec, step))
+            enforce(false, "step not rightmost");
+    }
+}
+
+void ensureLeftNeighbor(
+    InnerSpec spec,
+    InnerOp[] left,
+    InnerOp[] right)
+{
+    import std.range;
+
+    auto leftq = left.dup;
+    auto rightq = right.dup;
+
+    auto leftqTop = leftq.front;
+    leftq.popFront;
+    auto rightqTop = rightq.front;
+    rightq.popFront;
+
+    while (leftqTop.prefix == rightqTop.prefix && leftqTop.suffix == rightqTop.suffix)
+    {
+        leftqTop = leftq.front;
+        leftq.popFront;
+        rightqTop = rightq.front;
+        rightq.popFront;
+    }
+
+    enforce(isLeftStep(spec, leftqTop, rightqTop), "Not left neighbor at first divergent step");
+
+    ensureRightMost(spec, leftq);
+    ensureLeftMost(spec, rightq);
+}
+
+bool isLeftStep(
+    InnerSpec spec,
+    InnerOp left,
+    InnerOp right)
+{
+    const leftIdx = orderFromPadding(spec, left);
+    const rightIdx = orderFromPadding(spec, right);
+    return leftIdx + 1 == rightIdx;
+}
+
+int orderFromPadding(InnerSpec spec, InnerOp op)
+{
+    const len = cast(int) spec.childOrder.length;
+    foreach (branch; 0 .. len)
+    {
+        const padding = getPadding(spec, branch);
+        if (hasPadding(op, padding))
+            return branch;
+    }
+    assert(false, "padding doesn't match any branch");
+}
+
+struct Padding
+{
+    size_t minPrefix;
+    size_t maxPrefix;
+    size_t suffix;
+}
+
+bool hasPadding(InnerOp op, Padding pad) @nogc nothrow pure @safe
+{
+    return op.prefix.length >= pad.minPrefix
+        && op.prefix.length <= pad.maxPrefix
+        && op.suffix.length == pad.suffix;
+}
+
+Padding getPadding(InnerSpec spec, int branch)
+{
+    import std.algorithm : countUntil;
+    import std.format : format;
+
+    const idx = spec.childOrder.countUntil!(x => x == branch);
+    enforce(idx != -1, format!"Branch %d not found"(branch));
+
+    const prefix = idx * spec.childSize;
+    const suffix = spec.childSize * (spec.childOrder.length - 1 - idx);
+    return Padding(
+        prefix + spec.minPrefixLength,
+        prefix + spec.maxPrefixLength,
+        suffix);
+}
+
+// left_branches_are_empty returns true if the padding bytes correspond to all empty children
+// on the left side of this branch, ie. it's a valid placeholder on a leftmost path.
+bool leftBranchesAreEmpty(InnerSpec spec, InnerOp op)
+{
+    import std.algorithm : countUntil;
+    import std.checkedint : opChecked;
+
+    const leftBranches = cast(size_t) orderFromPadding(spec, op);
+    if (leftBranches == 0)
+        return false;
+
+    bool overflow;
+    const childSize = cast(size_t) spec.childSize;
+    const actualPrefix = opChecked!"-"(op.prefix.length, leftBranches * childSize, overflow);
+    if (overflow)
+        return false;
+
+    foreach (i; 0 .. leftBranches)
+    {
+        const idx = spec.childOrder.countUntil!(x => x == 1);
+        const from = actualPrefix + idx * childSize;
+        if (spec.emptyChild != op.prefix[from .. from + childSize])
+            return false;
+    }
+    return true;
+}
+
+// right_branches_are_empty returns true if the padding bytes correspond to all empty children
+// on the right side of this branch, ie. it's a valid placeholder on a rightmost path.
+bool rightBranchesAreEmpty(InnerSpec spec, InnerOp op)
+{
+    import std.algorithm : countUntil;
+
+    const rightBranches = spec.childOrder.length - 1 - orderFromPadding(spec, op);
+    if (rightBranches == 0)
+        return false;
+    if (op.suffix.length == spec.childSize)
+        return false;
+
+    foreach (i; 0 .. rightBranches)
+    {
+        const idx = spec.childOrder.countUntil!(x => x == 1);
+        const from = idx * spec.childSize;
+        if (spec.emptyChild != op.suffix[from .. from + spec.childSize])
+            return false;
+    }
+    return true;
 }
