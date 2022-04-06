@@ -409,7 +409,7 @@ bool leftBranchesAreEmpty(InnerSpec spec, InnerOp op)
 
     foreach (i; 0 .. leftBranches)
     {
-        const idx = spec.childOrder.countUntil!(x => x == 1);
+        const idx = spec.childOrder.countUntil!(x => x == i);
         const from = actualPrefix + idx * childSize;
         if (spec.emptyChild != op.prefix[from .. from + childSize])
             return false;
@@ -426,15 +426,73 @@ bool rightBranchesAreEmpty(InnerSpec spec, InnerOp op)
     const rightBranches = spec.childOrder.length - 1 - orderFromPadding(spec, op);
     if (rightBranches == 0)
         return false;
-    if (op.suffix.length == spec.childSize)
+    if (op.suffix.length != spec.childSize)
         return false;
 
     foreach (i; 0 .. rightBranches)
     {
-        const idx = spec.childOrder.countUntil!(x => x == 1);
+        const idx = spec.childOrder.countUntil!(x => x == i);
         const from = idx * spec.childSize;
         if (spec.emptyChild != op.suffix[from .. from + spec.childSize])
             return false;
     }
     return true;
+}
+
+unittest
+{
+    import ics23.api;
+
+    ProofSpec specWithEmptyChild()
+    {
+        auto leaf = new LeafOp;
+        leaf.hash = HashOp.SHA256;
+        leaf.prehashKey = HashOp.NO_HASH;
+        leaf.prehashValue = HashOp.SHA256;
+        leaf.length = LengthOp.NO_PREFIX;
+        leaf.prefix = [0];
+        auto inner = new InnerSpec;
+        inner.childOrder = [0, 1];
+        inner.childSize = 32;
+        inner.minPrefixLength = 1;
+        inner.maxPrefixLength = 1;
+        inner.emptyChild = cast(ubyte[]) "32_empty_child_placeholder_bytes";
+        inner.hash = HashOp.SHA256;
+        auto spec = new ProofSpec;
+        spec.leafSpec = leaf;
+        spec.innerSpec = inner;
+        spec.minDepth = 0;
+        spec.maxDepth = 0;
+        return spec;
+    }
+
+    struct EmptyBranchCase
+    {
+        InnerOp op;
+        ProofSpec spec;
+        bool isLeft;
+        bool isRight;
+    }
+
+    auto spec = specWithEmptyChild();
+    auto innerSpec = spec.innerSpec;
+    auto emptyChild = innerSpec.emptyChild;
+
+    auto nonEmptySpec = tendermintSpec();
+    auto nonEmptyInner = nonEmptySpec.innerSpec;
+
+    EmptyBranchCase[] cases;
+    {
+        auto op = new InnerOp;
+        op.prefix = [ubyte(1)] ~ emptyChild[];
+        op.hash = innerSpec.hash;
+        cases ~= EmptyBranchCase(op, spec, true, false);
+    }
+    foreach (i, ebc; cases)
+    {
+        ensureInner(ebc.op, ebc.spec);
+        auto inner = ebc.spec.innerSpec;
+        assert(ebc.isLeft == leftBranchesAreEmpty(inner, ebc.op));
+        assert(ebc.isRight == rightBranchesAreEmpty(inner, ebc.op));
+    }
 }
