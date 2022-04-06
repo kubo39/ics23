@@ -86,6 +86,6 @@ ExistenceProof getExistProof(CommitmentProof proof, ubyte[] key)
     case CommitmentProof.ProofCase.proofNotSet:
     case CommitmentProof.ProofCase.nonexist:
     case CommitmentProof.ProofCase.compressed:
-        assert(false);
+        return null;
     }
 }
