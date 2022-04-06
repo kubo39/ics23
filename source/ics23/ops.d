@@ -11,12 +11,12 @@ import google.protobuf.encoding;
 import ics23.helper;
 import ics23.proofs;
 
-Hash applyInner(InnerOp inner, const(char)[] child)
+Hash applyInner(InnerOp inner, const(char)[] child) @trusted
 {
     return applyInner(inner, cast(const(ubyte)[]) child);
 }
 
-Hash applyInner(InnerOp inner, const(ubyte)[] child)
+Hash applyInner(InnerOp inner, const(ubyte)[] child) @trusted
 {
     enforce(child.length, "Missing child hash");
     auto image = inner.prefix;
@@ -47,12 +47,12 @@ unittest
     }
 }
 
-Hash applyLeaf(LeafOp leaf, const(char)[] key, const(char)[] value)
+Hash applyLeaf(LeafOp leaf, const(char)[] key, const(char)[] value) @trusted
 {
     return applyLeaf(leaf, cast(const(ubyte)[]) key, cast(const(ubyte)[]) value);
 }
 
-Hash applyLeaf(LeafOp leaf, const(ubyte)[] key, const(ubyte)[] value)
+Hash applyLeaf(LeafOp leaf, const(ubyte)[] key, const(ubyte)[] value) @trusted
 {
     auto hash = leaf.prefix;
     const prekey = prepareLeafData(leaf.prehashKey, leaf.length, key);
@@ -106,19 +106,19 @@ unittest
 
 private:
 
-Hash prepareLeafData(HashOp prehash, LengthOp length, const(ubyte)[] data)
+Hash prepareLeafData(HashOp prehash, LengthOp length, const(ubyte)[] data) @trusted
 {
     enforce(data.length, "Input to prepare data leaf missing");
     auto h = doHash(prehash, data);
     return doLength(length, h);
 }
 
-Hash doHash(HashOp hash, const(char)[] data)
+Hash doHash(HashOp hash, const(char)[] data) nothrow pure @trusted
 {
     return doHash(hash, cast(const(ubyte)[]) data);
 }
 
-Hash doHash(HashOp hash, const(ubyte)[] data)
+Hash doHash(HashOp hash, const(ubyte)[] data) nothrow pure @trusted
 {
     final switch (hash)
     {
@@ -163,12 +163,12 @@ unittest
     }
 }
 
-Hash doLength(LengthOp length, const(char)[] data)
+Hash doLength(LengthOp length, const(char)[] data) @trusted
 {
     return doLength(length, cast(ubyte[]) data);
 }
 
-Hash doLength(LengthOp length, const(ubyte)[] data)
+Hash doLength(LengthOp length, const(ubyte)[] data) @trusted
 {
     final switch (length)
     {

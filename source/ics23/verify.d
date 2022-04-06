@@ -15,7 +15,7 @@ void verifyExistence(
     ProofSpec spec,
     ubyte[] root,
     ubyte[] key,
-    ubyte[] value)
+    ubyte[] value) @trusted
 {
     checkExistenceSpec(proof, spec);
     enforce(proof.key == key, "Provided key doesn't match proof");
@@ -26,7 +26,7 @@ void verifyExistence(
 }
 
 // Calculate determines the root hash that matches the given proof.
-CommitmentRoot calculateExistenceRoot(ExistenceProof proof)
+CommitmentRoot calculateExistenceRoot(ExistenceProof proof) @trusted
 {
     enforce(proof.key.length, "Existence proof must have key set");
     enforce(proof.value.length, "Existence proof must have value set");
@@ -77,7 +77,7 @@ unittest
 
 private:
 
-void checkExistenceSpec(ExistenceProof proof, ProofSpec spec)
+void checkExistenceSpec(ExistenceProof proof, ProofSpec spec) pure @safe
 {
     enforce(proof.leaf !is null, "Leaf must be set");
     enforce(spec.leafSpec !is null, "LeafSpec must be set");
@@ -93,7 +93,7 @@ void checkExistenceSpec(ExistenceProof proof, ProofSpec spec)
     }
 }
 
-void ensureLeaf(LeafOp leaf, LeafOp leafSpec)
+void ensureLeaf(LeafOp leaf, LeafOp leafSpec) pure @safe
 {
     enforce(leaf.hash == leafSpec.hash, format!"Unexpected hashOp: %s"(leaf.hash));
     enforce(leaf.prehashKey == leafSpec.prehashKey, format!"Unexpected prehashKey: %s"(leaf.prehashKey));
@@ -102,14 +102,14 @@ void ensureLeaf(LeafOp leaf, LeafOp leafSpec)
     enforce(hasPrefix(leaf.prefix, leafSpec.prefix), format!"Incorrect prefix on leaf: %s"(leaf.prefix));
 }
 
-bool hasPrefix(bytes prefix, bytes data)
+bool hasPrefix(bytes prefix, bytes data) @nogc nothrow pure @safe
 {
     if (prefix.length > data.length)
         return false;
     return prefix == data[0 .. prefix.length];
 }
 
-void ensureInner(InnerOp inner, ProofSpec spec)
+void ensureInner(InnerOp inner, ProofSpec spec) pure @safe
 {
     enforce(spec.leafSpec !is null, "Spec requires leafSpec");
     enforce(spec.innerSpec !is null, "Spec requires innerSpec");
