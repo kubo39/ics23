@@ -93,6 +93,104 @@ void checkExistenceSpec(ExistenceProof proof, ProofSpec spec) pure @safe
     }
 }
 
+unittest
+{
+    import std.conv : hexString;
+    import std.exception : assertNotThrown, assertThrown;
+    import ics23.api : ivalSpec;
+
+    struct ExistenceCase
+    {
+        ExistenceProof proof;
+        ProofSpec spec;
+        bool valid;
+    }
+
+    auto validLeaf = new LeafOp;
+    validLeaf.hash = HashOp.SHA256;
+    validLeaf.prehashKey = HashOp.NO_HASH;
+    validLeaf.prehashValue = HashOp.SHA256;
+    validLeaf.length = LengthOp.VAR_PROTO;
+
+    auto invalidLeaf = new LeafOp;
+    invalidLeaf.hash = HashOp.SHA512;
+    invalidLeaf.prehashKey = HashOp.NO_HASH;
+    invalidLeaf.prehashValue = HashOp.NO_HASH;
+    invalidLeaf.length = LengthOp.VAR_PROTO;
+
+    auto validInner = new InnerOp;
+    validInner.hash = HashOp.SHA256;
+    validInner.prefix = cast(ubyte[]) hexString!"deadbeef00cafe00";
+
+    auto invalidInner = new InnerOp;
+    invalidInner.hash = HashOp.SHA256;
+    invalidInner.prefix = cast(ubyte[]) hexString!"aa";
+
+    auto invalidInnerHash = new InnerOp;
+    invalidInnerHash.hash = HashOp.SHA512;
+    invalidInnerHash.prefix = cast(ubyte[]) hexString!"deadbeef00cafe00";
+
+    ExistenceCase[string] cases;
+    {
+        auto proof = new ExistenceProof;
+        proof.key = cast(ubyte[]) "foo";
+        proof.value = cast(ubyte[]) "bar";
+        cases["empty proof fails"] = ExistenceCase(proof, ivalSpec(), false);
+    }
+    {
+        auto proof = new ExistenceProof;
+        proof.key = cast(ubyte[]) "foo";
+        proof.value = cast(ubyte[]) "bar";
+        proof.leaf = validLeaf;
+        cases["accept one valid leaf"] = ExistenceCase(proof, ivalSpec(), true);
+    }
+    {
+        auto proof = new ExistenceProof;
+        proof.key = cast(ubyte[]) "foo";
+        proof.value = cast(ubyte[]) "bar";
+        proof.leaf = invalidLeaf;
+        cases["rejects invalid leaf"] = ExistenceCase(proof, ivalSpec(), false);
+    }
+    {
+        auto proof = new ExistenceProof;
+        proof.key = cast(ubyte[]) "foo";
+        proof.value = cast(ubyte[]) "bar";
+        proof.path = [validInner];
+        cases["rejects only inner (no leaf)"] = ExistenceCase(proof, ivalSpec(), false);
+    }
+    {
+        auto proof = new ExistenceProof;
+        proof.key = cast(ubyte[]) "foo";
+        proof.value = cast(ubyte[]) "bar";
+        proof.leaf = validLeaf;
+        proof.path = [validInner];
+        cases["accepts leaf and valid inner"] = ExistenceCase(proof, ivalSpec(), true);
+    }
+    {
+        auto proof = new ExistenceProof;
+        proof.key = cast(ubyte[]) "foo";
+        proof.value = cast(ubyte[]) "bar";
+        proof.leaf = validLeaf;
+        proof.path = [invalidInner];
+        cases["rejects invalid inner (prefix)"] = ExistenceCase(proof, ivalSpec(), false);
+    }
+    {
+        auto proof = new ExistenceProof;
+        proof.key = cast(ubyte[]) "foo";
+        proof.value = cast(ubyte[]) "bar";
+        proof.leaf = validLeaf;
+        proof.path = [invalidInnerHash];
+        cases["rejects invalid inner (hash)"] = ExistenceCase(proof, ivalSpec(), false);
+    }
+    foreach (name, tc; cases)
+    {
+        if (tc.valid)
+            assertNotThrown(checkExistenceSpec(tc.proof, tc.spec), name);
+        else
+            assertThrown(checkExistenceSpec(tc.proof, tc.spec), name);
+    }
+}
+
 void ensureLeaf(LeafOp leaf, LeafOp leafSpec) pure @safe
 {
     enforce(leaf.hash == leafSpec.hash, format!"Unexpected hashOp: %s"(leaf.hash));
