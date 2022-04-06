@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        dc: [dmd-latest, ldc-latest]
+        dc: [dmd-latest] # temporary disable ldc-latest since there' no std.checkedint
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
