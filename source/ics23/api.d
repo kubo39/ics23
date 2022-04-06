@@ -17,7 +17,7 @@ bool verifyMembership(
     return true;
 }
 
-ProofSpec ivalSpec()
+ProofSpec iavlSpec()
 {
     auto leaf = new LeafOp;
     leaf.hash = HashOp.SHA256;

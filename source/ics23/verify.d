@@ -139,7 +139,7 @@ unittest
 {
     import std.conv : hexString;
     import std.exception : assertNotThrown, assertThrown;
-    import ics23.api : ivalSpec;
+    import ics23.api : iavlSpec;
 
     struct ExistenceCase
     {
@@ -177,28 +177,28 @@ unittest
         auto proof = new ExistenceProof;
         proof.key = cast(ubyte[]) "foo";
         proof.value = cast(ubyte[]) "bar";
-        cases["empty proof fails"] = ExistenceCase(proof, ivalSpec(), false);
+        cases["empty proof fails"] = ExistenceCase(proof, iavlSpec(), false);
     }
     {
         auto proof = new ExistenceProof;
         proof.key = cast(ubyte[]) "foo";
         proof.value = cast(ubyte[]) "bar";
         proof.leaf = validLeaf;
-        cases["accept one valid leaf"] = ExistenceCase(proof, ivalSpec(), true);
+        cases["accept one valid leaf"] = ExistenceCase(proof, iavlSpec(), true);
     }
     {
         auto proof = new ExistenceProof;
         proof.key = cast(ubyte[]) "foo";
         proof.value = cast(ubyte[]) "bar";
         proof.leaf = invalidLeaf;
-        cases["rejects invalid leaf"] = ExistenceCase(proof, ivalSpec(), false);
+        cases["rejects invalid leaf"] = ExistenceCase(proof, iavlSpec(), false);
     }
     {
         auto proof = new ExistenceProof;
         proof.key = cast(ubyte[]) "foo";
         proof.value = cast(ubyte[]) "bar";
         proof.path = [validInner];
-        cases["rejects only inner (no leaf)"] = ExistenceCase(proof, ivalSpec(), false);
+        cases["rejects only inner (no leaf)"] = ExistenceCase(proof, iavlSpec(), false);
     }
     {
         auto proof = new ExistenceProof;
@@ -206,7 +206,7 @@ unittest
         proof.value = cast(ubyte[]) "bar";
         proof.leaf = validLeaf;
         proof.path = [validInner];
-        cases["accepts leaf and valid inner"] = ExistenceCase(proof, ivalSpec(), true);
+        cases["accepts leaf and valid inner"] = ExistenceCase(proof, iavlSpec(), true);
     }
     {
         auto proof = new ExistenceProof;
@@ -214,7 +214,7 @@ unittest
         proof.value = cast(ubyte[]) "bar";
         proof.leaf = validLeaf;
         proof.path = [invalidInner];
-        cases["rejects invalid inner (prefix)"] = ExistenceCase(proof, ivalSpec(), false);
+        cases["rejects invalid inner (prefix)"] = ExistenceCase(proof, iavlSpec(), false);
     }
     {
         auto proof = new ExistenceProof;
@@ -222,7 +222,7 @@ unittest
         proof.value = cast(ubyte[]) "bar";
         proof.leaf = validLeaf;
         proof.path = [invalidInnerHash];
-        cases["rejects invalid inner (hash)"] = ExistenceCase(proof, ivalSpec(), false);
+        cases["rejects invalid inner (hash)"] = ExistenceCase(proof, iavlSpec(), false);
     }
     foreach (name, tc; cases)
     {
