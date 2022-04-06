@@ -17,6 +17,30 @@ bool verifyMembership(
     return true;
 }
 
+ProofSpec ivalSpec()
+{
+    auto leaf = new LeafOp;
+    leaf.hash = HashOp.SHA256;
+    leaf.prehashKey = HashOp.NO_HASH;
+    leaf.prehashValue = HashOp.SHA256;
+    leaf.length = LengthOp.VAR_PROTO;
+
+    auto inner = new InnerSpec;
+    inner.childOrder = [0, 1];
+    inner.minPrefixLength = 4;
+    inner.maxPrefixLength = 12;
+    inner.childSize = 33;
+    inner.emptyChild = [];
+    inner.hash = HashOp.SHA256;
+
+    auto spec = new ProofSpec;
+    spec.leafSpec = leaf;
+    spec.innerSpec = inner;
+    spec.minDepth = 0;
+    spec.maxDepth = 0;
+    return spec;
+}
+
 private:
 
 ExistenceProof getExistProof(CommitmentProof proof, ubyte[] key)
