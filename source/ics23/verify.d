@@ -488,6 +488,71 @@ unittest
         op.hash = innerSpec.hash;
         cases ~= EmptyBranchCase(op, spec, true, false);
     }
+    {
+        auto op = new InnerOp;
+        op.prefix = [ubyte(1)];
+        op.suffix = emptyChild;
+        op.hash = innerSpec.hash;
+        cases ~= EmptyBranchCase(op, spec, false, true);
+    }
+
+    // non-empty cases
+    {
+        auto op = new InnerOp;
+        op.prefix = [ubyte(1),
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0];
+        op.hash = innerSpec.hash;
+        cases ~= EmptyBranchCase(op, spec, false, false);
+    }
+    {
+        auto op = new InnerOp;
+        op.prefix = [ubyte(1)];
+        op.suffix = [0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0];
+        op.hash = innerSpec.hash;
+        cases ~= EmptyBranchCase(op, spec, false, false);
+    }
+    {
+        auto op = new InnerOp;
+        op.prefix = [ubyte(1)] ~ emptyChild[0 .. 28][] ~ cast(ubyte[])"xxxx";
+        op.hash = innerSpec.hash;
+        cases ~= EmptyBranchCase(op, spec, false, false);
+    }
+    {
+        auto op = new InnerOp;
+        op.prefix = [ubyte(1)];
+        op.suffix = emptyChild[0 .. 28][] ~ cast(ubyte[])"xxxx";
+        op.hash = innerSpec.hash;
+        cases ~= EmptyBranchCase(op, spec, false, false);
+    }
+
+    // some case using a spec with no empty child.
+    {
+        auto op = new InnerOp;
+        op.prefix = [ubyte(1),
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0];
+        op.hash = innerSpec.hash;
+        cases ~= EmptyBranchCase(op, nonEmptySpec, false, false);
+    }
+    {
+        auto op = new InnerOp;
+        op.prefix = [ubyte(1)];
+        op.suffix = [0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0];
+        op.hash = innerSpec.hash;
+        cases ~= EmptyBranchCase(op, nonEmptySpec, false, false);
+    }
+
     foreach (i, ebc; cases)
     {
         ensureInner(ebc.op, ebc.spec);
