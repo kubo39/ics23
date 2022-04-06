@@ -39,7 +39,7 @@ void verifyNonExistence(
     if (proof.right !is null)
     {
         verifyExistence(proof.right, spec, root, proof.right.key, proof.right.value);
-        enforce(key > proof.right.key, "right key isn't before key");
+        enforce(key > proof.right.key, "right key isn't after key");
     }
     enforce(spec.innerSpec !is null, "Inner spec missing");
 
