@@ -172,6 +172,10 @@ unittest
     invalidInnerHash.hash = HashOp.SHA512;
     invalidInnerHash.prefix = cast(ubyte[]) hexString!"deadbeef00cafe00";
 
+    auto depthLimitedSpec = iavlSpec();
+    depthLimitedSpec.minDepth = 2;
+    depthLimitedSpec.maxDepth = 4;
+
     ExistenceCase[string] cases;
     {
         auto proof = new ExistenceProof;
@@ -223,6 +227,30 @@ unittest
         proof.leaf = validLeaf;
         proof.path = [invalidInnerHash];
         cases["rejects invalid inner (hash)"] = ExistenceCase(proof, iavlSpec(), false);
+    }
+    {
+        auto proof = new ExistenceProof;
+        proof.key = cast(ubyte[]) "foo";
+        proof.value = cast(ubyte[]) "bar";
+        proof.leaf = validLeaf;
+        proof.path = [validInner, validInner, validInner];
+        cases["accepts depth limited with proper number of inner nodes"] = ExistenceCase(proof, depthLimitedSpec, true);
+    }
+    {
+        auto proof = new ExistenceProof;
+        proof.key = cast(ubyte[]) "foo";
+        proof.value = cast(ubyte[]) "bar";
+        proof.leaf = validLeaf;
+        proof.path = [validInner];
+        cases["reject depth limited with too few inner nodes"] = ExistenceCase(proof, depthLimitedSpec, false);
+    }
+    {
+        auto proof = new ExistenceProof;
+        proof.key = cast(ubyte[]) "foo";
+        proof.value = cast(ubyte[]) "bar";
+        proof.leaf = validLeaf;
+        proof.path = [validInner, validInner, validInner, validInner, validInner];
+        cases["reject depth limited with too many inner nodes"] = ExistenceCase(proof, depthLimitedSpec, false);
     }
     foreach (name, tc; cases)
     {
