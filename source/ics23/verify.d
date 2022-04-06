@@ -288,7 +288,7 @@ void ensureInner(InnerOp inner, ProofSpec spec) pure @safe
     enforce(inner.prefix.length <= (spec.innerSpec.maxPrefixLength + maxLeftChildBytes), format!"Inner prefix too short: %s"(inner.prefix.length));
 }
 
-void ensureLeftMost(InnerSpec spec, InnerOp[] path)
+void ensureLeftMost(InnerSpec spec, InnerOp[] path) pure @trusted
 {
     const pad = getPadding(spec, 0);
     foreach (step; path)
@@ -298,7 +298,7 @@ void ensureLeftMost(InnerSpec spec, InnerOp[] path)
     }
 }
 
-void ensureRightMost(InnerSpec spec, InnerOp[] path)
+void ensureRightMost(InnerSpec spec, InnerOp[] path) pure @trusted
 {
     const idx = cast(int) spec.childOrder.length - 1;
     const pad = getPadding(spec, idx);
@@ -312,7 +312,7 @@ void ensureRightMost(InnerSpec spec, InnerOp[] path)
 void ensureLeftNeighbor(
     InnerSpec spec,
     InnerOp[] left,
-    InnerOp[] right)
+    InnerOp[] right) pure @trusted
 {
     import std.range;
 
@@ -341,14 +341,14 @@ void ensureLeftNeighbor(
 bool isLeftStep(
     InnerSpec spec,
     InnerOp left,
-    InnerOp right)
+    InnerOp right) pure @trusted
 {
     const leftIdx = orderFromPadding(spec, left);
     const rightIdx = orderFromPadding(spec, right);
     return leftIdx + 1 == rightIdx;
 }
 
-int orderFromPadding(InnerSpec spec, InnerOp op)
+int orderFromPadding(InnerSpec spec, InnerOp op) pure @trusted
 {
     const len = cast(int) spec.childOrder.length;
     foreach (branch; 0 .. len)
@@ -374,7 +374,7 @@ bool hasPadding(InnerOp op, Padding pad) @nogc nothrow pure @safe
         && op.suffix.length == pad.suffix;
 }
 
-Padding getPadding(InnerSpec spec, int branch)
+Padding getPadding(InnerSpec spec, int branch) pure @trusted
 {
     import std.algorithm : countUntil;
     import std.format : format;
@@ -392,7 +392,7 @@ Padding getPadding(InnerSpec spec, int branch)
 
 // left_branches_are_empty returns true if the padding bytes correspond to all empty children
 // on the left side of this branch, ie. it's a valid placeholder on a leftmost path.
-bool leftBranchesAreEmpty(InnerSpec spec, InnerOp op)
+bool leftBranchesAreEmpty(InnerSpec spec, InnerOp op) pure @trusted
 {
     import std.algorithm : countUntil;
     import std.checkedint : opChecked;
@@ -419,7 +419,7 @@ bool leftBranchesAreEmpty(InnerSpec spec, InnerOp op)
 
 // right_branches_are_empty returns true if the padding bytes correspond to all empty children
 // on the right side of this branch, ie. it's a valid placeholder on a rightmost path.
-bool rightBranchesAreEmpty(InnerSpec spec, InnerOp op)
+bool rightBranchesAreEmpty(InnerSpec spec, InnerOp op) pure @trusted
 {
     import std.algorithm : countUntil;
 
