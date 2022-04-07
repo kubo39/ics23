@@ -20,6 +20,21 @@ bool verifyMembership(
     return true;
 }
 
+bool verifyNonMembership(
+    CommitmentProof proof,
+    ProofSpec spec,
+    CommitmentRoot root,
+    ubyte[] key)
+{
+    auto exist = isCompressed(proof)
+        ? getNonexistProof(decompress(proof), key)
+        : getNonexistProof(proof, key);
+    if (exist is null)
+        return false;
+    verifyNonExistence(exist, spec, root, key);
+    return true;
+}
+
 // Fromat of proofs-iavl (immutable-AVL merkle proofs)
 ProofSpec iavlSpec()
 {
@@ -90,6 +105,32 @@ ExistenceProof getExistProof(CommitmentProof proof, ubyte[] key)
         return null;
     case CommitmentProof.ProofCase.proofNotSet:
     case CommitmentProof.ProofCase.nonexist:
+    case CommitmentProof.ProofCase.compressed:
+        return null;
+    }
+}
+
+NonExistenceProof getNonexistProof(CommitmentProof proof, ubyte[] key)
+{
+    final switch (proof.proofCase)
+    {
+    case CommitmentProof.ProofCase.nonexist:
+        return proof._nonexist;
+    case CommitmentProof.ProofCase.batch:
+        foreach (entry; proof._batch.entries)
+        {
+            if (entry.proofCase == BatchEntry.ProofCase.nonexist)
+            {
+                auto non = entry._nonexist;
+                if (non.left.key < key && non.right.key > key)
+                {
+                    return non;
+                }
+            }
+        }
+        return null;
+    case CommitmentProof.ProofCase.proofNotSet:
+    case CommitmentProof.ProofCase.exist:
     case CommitmentProof.ProofCase.compressed:
         return null;
     }
