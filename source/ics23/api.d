@@ -24,7 +24,7 @@ bool verifyNonMembership(
     CommitmentProof proof,
     ProofSpec spec,
     CommitmentRoot root,
-    ubyte[] key)
+    const(ubyte)[] key)
 {
     auto exist = isCompressed(proof)
         ? getNonexistProof(decompress(proof), key)
@@ -48,6 +48,23 @@ bool verifyBatchMembership(
         : _proof;
     foreach (key, value; items)
         if (!verifyMembership(proof, spec, root, key, value))
+            return false;
+    return true;
+}
+
+bool verifyBatchNonMembership(
+    CommitmentProof _proof,
+    ProofSpec spec,
+    CommitmentRoot root,
+    const(ubyte)[][] keys)
+{
+    import std.algorithm : all;
+
+    auto proof = isCompressed(_proof)
+        ? decompress(_proof)
+        : _proof;
+    foreach (key; keys)
+        if (!verifyNonMembership(proof, spec, root, key))
             return false;
     return true;
 }
