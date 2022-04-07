@@ -13,9 +13,9 @@ alias CommitmentRoot = ubyte[];
 void verifyExistence(
     ExistenceProof proof,
     ProofSpec spec,
-    ubyte[] root,
-    ubyte[] key,
-    ubyte[] value) @trusted
+    const(ubyte)[] root,
+    const(ubyte)[] key,
+    const(ubyte)[] value) @trusted
 {
     checkExistenceSpec(proof, spec);
     enforce(proof.key == key, "Provided key doesn't match proof");
@@ -28,8 +28,8 @@ void verifyExistence(
 void verifyNonExistence(
     NonExistenceProof proof,
     ProofSpec spec,
-    ubyte[] root,
-    ubyte[] key) @trusted
+    const(ubyte)[] root,
+    const(ubyte)[] key) @trusted
 {
     if (proof.left !is null)
     {

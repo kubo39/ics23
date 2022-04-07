@@ -8,8 +8,8 @@ bool verifyMembership(
     CommitmentProof proof,
     ProofSpec spec,
     CommitmentRoot root,
-    ubyte[] key,
-    ubyte[] value)
+    const(ubyte)[] key,
+    const(ubyte)[] value)
 {
     auto exist = isCompressed(proof)
         ? getExistProof(decompress(proof), key)
@@ -32,6 +32,23 @@ bool verifyNonMembership(
     if (exist is null)
         return false;
     verifyNonExistence(exist, spec, root, key);
+    return true;
+}
+
+bool verifyBatchMembership(
+    CommitmentProof _proof,
+    ProofSpec spec,
+    CommitmentRoot root,
+    const(ubyte)[][const(ubyte)[]] items)
+{
+    import std.algorithm : all;
+
+    auto proof = isCompressed(_proof)
+        ? decompress(_proof)
+        : _proof;
+    foreach (key, value; items)
+        if (!verifyMembership(proof, spec, root, key, value))
+            return false;
     return true;
 }
 
@@ -87,7 +104,7 @@ ProofSpec tendermintSpec()
 
 private:
 
-ExistenceProof getExistProof(CommitmentProof proof, ubyte[] key)
+ExistenceProof getExistProof(CommitmentProof proof, const(ubyte)[] key)
 {
     final switch (proof.proofCase)
     {
@@ -110,7 +127,7 @@ ExistenceProof getExistProof(CommitmentProof proof, ubyte[] key)
     }
 }
 
-NonExistenceProof getNonexistProof(CommitmentProof proof, ubyte[] key)
+NonExistenceProof getNonexistProof(CommitmentProof proof, const(ubyte)[] key)
 {
     final switch (proof.proofCase)
     {
