@@ -17,6 +17,7 @@ bool verifyMembership(
     return true;
 }
 
+// Fromat of proofs-iavl (immutable-AVL merkle proofs)
 ProofSpec iavlSpec()
 {
     auto leaf = new LeafOp;
@@ -41,6 +42,7 @@ ProofSpec iavlSpec()
     return spec;
 }
 
+// Format of proofs-tendermint (crypto/ merkle SimpleProof)
 ProofSpec tendermintSpec()
 {
     auto leaf = new LeafOp;
