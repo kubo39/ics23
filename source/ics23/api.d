@@ -1,5 +1,6 @@
 module ics23.api;
 
+import ics23.compress;
 import ics23.proofs;
 import ics23.verify;
 
@@ -10,7 +11,9 @@ bool verifyMembership(
     ubyte[] key,
     ubyte[] value)
 {
-    auto exist = getExistProof(proof, key);
+    auto exist = isCompressed(proof)
+        ? getExistProof(decompress(proof), key)
+        : getExistProof(proof, key);
     if (exist is null)
         return false;
     verifyExistence(exist, spec, root, key, value);
