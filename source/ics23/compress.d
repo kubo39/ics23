@@ -36,7 +36,7 @@ CommitmentProof compressBatch(BatchProof proof)
 {
     CompressedBatchEntry[] entries;
     InnerOp[] lookup;
-    int[ubyte[]] registry;
+    int[const(ubyte)[]] registry;
     foreach (entry; proof.entries)
     {
         final switch (entry.proofCase)
@@ -78,7 +78,7 @@ CommitmentProof compressBatch(BatchProof proof)
 CompressedExistenceProof compressExist(
     ExistenceProof exist,
     InnerOp[] lookup,
-    int[ubyte[]] registry)
+    int[const(ubyte)[]] registry)
 {
     import google.protobuf.encoding;
 
