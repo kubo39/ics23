@@ -1,6 +1,6 @@
 # ics23
 
-Work in progress.
+D client for [ICS23: Vector Commitments].
 
 See also: https://github.com/confio/ics23
 
@@ -17,3 +17,5 @@ protoc --plugin=protoc-gen-d --d_out=./source --proto_path=./ proofs.proto
 ```console
 dub test
 ```
+
+[ICS23: Vector Commitments]: https://github.com/cosmos/ibc/tree/master/spec/core/ics-023-vector-commitments
