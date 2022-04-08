@@ -10,7 +10,7 @@ bool isCompressed(CommitmentProof proof) @trusted
     return proof.proofCase == CommitmentProof.ProofCase.compressed;
 }
 
-CommitmentProof compress(CommitmentProof proof)
+CommitmentProof compress(CommitmentProof proof) @trusted
 {
     switch (proof.proofCase)
     {
@@ -21,7 +21,7 @@ CommitmentProof compress(CommitmentProof proof)
     }
 }
 
-CommitmentProof decompress(CommitmentProof proof)
+CommitmentProof decompress(CommitmentProof proof) @trusted
 {
     switch (proof.proofCase)
     {
@@ -32,7 +32,7 @@ CommitmentProof decompress(CommitmentProof proof)
     }
 }
 
-CommitmentProof compressBatch(BatchProof proof)
+CommitmentProof compressBatch(BatchProof proof) @trusted
 {
     CompressedBatchEntry[] entries;
     InnerOp[] lookup;
@@ -78,7 +78,7 @@ CommitmentProof compressBatch(BatchProof proof)
 CompressedExistenceProof compressExist(
     ExistenceProof exist,
     InnerOp[] lookup,
-    int[const(ubyte)[]] registry)
+    int[const(ubyte)[]] registry) @trusted
 {
     import google.protobuf.encoding;
 
@@ -106,7 +106,7 @@ CompressedExistenceProof compressExist(
     return proof;
 }
 
-CommitmentProof decompressBatch(CompressedBatchProof proof)
+CommitmentProof decompressBatch(CompressedBatchProof proof) @trusted
 {
     auto lookup = proof.lookupInners;
     auto entries = proof
@@ -146,7 +146,7 @@ CommitmentProof decompressBatch(CompressedBatchProof proof)
     return commitmentProof;
 }
 
-ExistenceProof decompressExist(CompressedExistenceProof exist, InnerOp[] lookup)
+ExistenceProof decompressExist(CompressedExistenceProof exist, InnerOp[] lookup) @trusted
 {
     auto path = exist
         .path

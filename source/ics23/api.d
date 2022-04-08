@@ -9,7 +9,7 @@ bool verifyMembership(
     ProofSpec spec,
     const(CommitmentRoot) root,
     const(ubyte)[] key,
-    const(ubyte)[] value)
+    const(ubyte)[] value) @trusted
 {
     auto exist = isCompressed(proof)
         ? getExistProof(decompress(proof), key)
@@ -24,7 +24,7 @@ bool verifyNonMembership(
     CommitmentProof proof,
     ProofSpec spec,
     const(CommitmentRoot) root,
-    const(ubyte)[] key)
+    const(ubyte)[] key) @trusted
 {
     auto exist = isCompressed(proof)
         ? getNonexistProof(decompress(proof), key)
@@ -39,7 +39,7 @@ bool verifyBatchMembership(
     CommitmentProof _proof,
     ProofSpec spec,
     const(CommitmentRoot) root,
-    const(ubyte)[][const(ubyte)[]] items)
+    const(ubyte)[][const(ubyte)[]] items) @trusted
 {
     import std.algorithm : all;
 
@@ -56,7 +56,7 @@ bool verifyBatchNonMembership(
     CommitmentProof _proof,
     ProofSpec spec,
     const(CommitmentRoot) root,
-    const(ubyte)[][] keys)
+    const(ubyte)[][] keys) @trusted
 {
     import std.algorithm : all;
 
@@ -70,7 +70,7 @@ bool verifyBatchNonMembership(
 }
 
 // Fromat of proofs-iavl (immutable-AVL merkle proofs)
-ProofSpec iavlSpec()
+ProofSpec iavlSpec() @trusted
 {
     auto leaf = new LeafOp;
     leaf.hash = HashOp.SHA256;
@@ -95,7 +95,7 @@ ProofSpec iavlSpec()
 }
 
 // Format of proofs-tendermint (crypto/ merkle SimpleProof)
-ProofSpec tendermintSpec()
+ProofSpec tendermintSpec() @trusted
 {
     auto leaf = new LeafOp;
     leaf.hash = HashOp.SHA256;
@@ -119,7 +119,7 @@ ProofSpec tendermintSpec()
     return spec;
 }
 
-ProofSpec smtSpec()
+ProofSpec smtSpec() @trusted
 {
     auto leaf = new LeafOp;
     leaf.hash = HashOp.SHA256;
@@ -149,7 +149,7 @@ ProofSpec smtSpec()
 
 private:
 
-ExistenceProof getExistProof(CommitmentProof proof, const(ubyte)[] key)
+ExistenceProof getExistProof(CommitmentProof proof, const(ubyte)[] key) @trusted
 {
     final switch (proof.proofCase)
     {
@@ -172,7 +172,7 @@ ExistenceProof getExistProof(CommitmentProof proof, const(ubyte)[] key)
     }
 }
 
-NonExistenceProof getNonexistProof(CommitmentProof proof, const(ubyte)[] key)
+NonExistenceProof getNonexistProof(CommitmentProof proof, const(ubyte)[] key) @trusted
 {
     final switch (proof.proofCase)
     {
