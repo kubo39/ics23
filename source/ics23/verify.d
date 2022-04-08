@@ -117,6 +117,23 @@ unittest
     }
 }
 
+class InvalidMerkleProof : Exception
+{
+    this(string msg, string file = __FILE__, size_t line = __LINE__)
+    {
+        super(msg, file, line);
+    }
+}
+
+CommitmentRoot calculateNonExistenceRoot(NonExistenceProof proof) @trusted
+{
+    if (proof.left !is null)
+        return calculateExistenceRoot(proof.left);
+    if (proof.right !is null)
+        return calculateExistenceRoot(proof.right);
+    throw new InvalidMerkleProof("Nonexistence proof has emptt left and right proof.");
+}
+
 private:
 
 void checkExistenceSpec(ExistenceProof proof, ProofSpec spec) pure @safe
