@@ -247,4 +247,24 @@ unittest
         auto spec = iavlSpec();
         verifyTestData("testdata/iavl/exist_left.json", spec);
     }
+    {
+        auto spec = iavlSpec();
+        verifyTestData("testdata/iavl/exist_right.json", spec);
+    }
+    {
+        auto spec = iavlSpec();
+        verifyTestData("testdata/iavl/exist_middle.json", spec);
+    }
+    {
+        auto spec = iavlSpec();
+        verifyTestData("testdata/iavl/nonexist_left.json", spec);
+    }
+    {
+        auto spec = iavlSpec();
+        verifyTestData("testdata/iavl/nonexist_right.json", spec);
+    }
+    {
+        auto spec = iavlSpec();
+        verifyTestData("testdata/iavl/nonexist_middle.json", spec);
+    }
 }
