@@ -7,7 +7,7 @@ import ics23.verify;
 bool verifyMembership(
     CommitmentProof proof,
     ProofSpec spec,
-    CommitmentRoot root,
+    const(CommitmentRoot) root,
     const(ubyte)[] key,
     const(ubyte)[] value)
 {
@@ -23,7 +23,7 @@ bool verifyMembership(
 bool verifyNonMembership(
     CommitmentProof proof,
     ProofSpec spec,
-    CommitmentRoot root,
+    const(CommitmentRoot) root,
     const(ubyte)[] key)
 {
     auto exist = isCompressed(proof)
@@ -38,7 +38,7 @@ bool verifyNonMembership(
 bool verifyBatchMembership(
     CommitmentProof _proof,
     ProofSpec spec,
-    CommitmentRoot root,
+    const(CommitmentRoot) root,
     const(ubyte)[][const(ubyte)[]] items)
 {
     import std.algorithm : all;
@@ -55,7 +55,7 @@ bool verifyBatchMembership(
 bool verifyBatchNonMembership(
     CommitmentProof _proof,
     ProofSpec spec,
-    CommitmentRoot root,
+    const(CommitmentRoot) root,
     const(ubyte)[][] keys)
 {
     import std.algorithm : all;
@@ -167,5 +167,84 @@ NonExistenceProof getNonexistProof(CommitmentProof proof, const(ubyte)[] key)
     case CommitmentProof.ProofCase.exist:
     case CommitmentProof.ProofCase.compressed:
         return null;
+    }
+}
+
+unittest
+{
+    import std.file;
+    import std.json;
+    import std.meta : AliasSeq;
+    import std.typecons;
+
+    // stolen from phobos.
+    auto hexStrLiteral(string hexData)
+    {
+        import std.ascii : isHexDigit;
+        char[] result;
+        result.length = 1 + hexData.length * 2 + 1;
+        auto r = result.ptr;
+        r[0] = '"';
+        size_t cnt = 0;
+        foreach (c; hexData)
+        {
+            if (c.isHexDigit)
+            {
+                if ((cnt & 1) == 0)
+                {
+                    r[1 + cnt]     = '\\';
+                    r[1 + cnt + 1] = 'x';
+                    cnt += 2;
+                }
+                r[1 + cnt] = c;
+                ++cnt;
+            }
+        }
+        r[1 + cnt] = '"';
+        result.length = 1 + cnt + 1;
+        return result;
+    }
+
+    struct RefData
+    {
+        const(ubyte)[] root;
+        const(ubyte)[] key;
+        const(ubyte)[] value;
+    }
+
+    auto loadFile(string filename)
+    {
+        auto contents = readText(filename);
+        JSONValue data = parseJSON(contents);
+        auto protoBin = hexStrLiteral(data["proof"].str);
+        auto commitmentProof = new CommitmentProof;
+        RefData refData;
+        refData.root = cast(ubyte[]) hexStrLiteral(data["root"].str);
+        refData.key = cast(ubyte[]) hexStrLiteral(data["key"].str);
+        if (const(JSONValue)* value = "value" in data)
+        {
+            refData.value = cast(ubyte[]) hexStrLiteral(value.str);
+        }
+        return tuple(commitmentProof, refData);
+    }
+
+    void verifyTestData(string filename, ProofSpec spec)
+    {
+        CommitmentProof proof;
+        RefData data;
+        AliasSeq!(proof, data) = loadFile(filename);
+        if (data.value !is null)
+        {
+            verifyMembership(proof, spec, data.root, data.key, data.value);
+        }
+        else
+        {
+            verifyNonMembership(proof, spec, data.root, data.key);
+        }
+    }
+
+    {
+        auto spec = iavlSpec();
+        verifyTestData("testdata/iavl/exist_left.json", spec);
     }
 }
