@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        dc: [dmd-latest] # temporary disable ldc-latest since there' no std.checkedint
+        dc: [dmd-latest, ldc-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -17,7 +17,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ~/.dub
-          key: ${{ matrix.dc }}-${{ matrix.os }}-dub-${{ hashFiles('**/dub.selections.json') }}
+          key: ${{ matrix.dc }}-${{ matrix.os }}-dub-${{ hashFiles('**/dub.json') }}
           restore-keys: |
             ${{ matrix.dc }}-${{ matrix.os }}-dub-
       - name: Run tests
