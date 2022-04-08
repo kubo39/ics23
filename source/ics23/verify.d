@@ -8,12 +8,12 @@ import google.protobuf.common;
 import ics23.ops;
 import ics23.proofs;
 
-alias CommitmentRoot = ubyte[];
+alias CommitmentRoot = const(ubyte)[];
 
 void verifyExistence(
     ExistenceProof proof,
     ProofSpec spec,
-    const(ubyte)[] root,
+    CommitmentRoot root,
     const(ubyte)[] key,
     const(ubyte)[] value) @trusted
 {
@@ -28,7 +28,7 @@ void verifyExistence(
 void verifyNonExistence(
     NonExistenceProof proof,
     ProofSpec spec,
-    const(ubyte)[] root,
+    CommitmentRoot root,
     const(ubyte)[] key) @trusted
 {
     if (proof.left !is null)

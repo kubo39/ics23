@@ -7,7 +7,7 @@ import ics23.verify;
 bool verifyMembership(
     CommitmentProof proof,
     ProofSpec spec,
-    const(CommitmentRoot) root,
+    CommitmentRoot root,
     const(ubyte)[] key,
     const(ubyte)[] value) @trusted
 {
@@ -23,7 +23,7 @@ bool verifyMembership(
 bool verifyNonMembership(
     CommitmentProof proof,
     ProofSpec spec,
-    const(CommitmentRoot) root,
+    CommitmentRoot root,
     const(ubyte)[] key) @trusted
 {
     auto exist = isCompressed(proof)
@@ -38,7 +38,7 @@ bool verifyNonMembership(
 bool verifyBatchMembership(
     CommitmentProof _proof,
     ProofSpec spec,
-    const(CommitmentRoot) root,
+    CommitmentRoot root,
     const(ubyte)[][const(ubyte)[]] items) @trusted
 {
     import std.algorithm : all;
@@ -55,7 +55,7 @@ bool verifyBatchMembership(
 bool verifyBatchNonMembership(
     CommitmentProof _proof,
     ProofSpec spec,
-    const(CommitmentRoot) root,
+    CommitmentRoot root,
     const(ubyte)[][] keys) @trusted
 {
     import std.algorithm : all;
