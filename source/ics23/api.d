@@ -119,6 +119,34 @@ ProofSpec tendermintSpec()
     return spec;
 }
 
+ProofSpec smtSpec()
+{
+    auto leaf = new LeafOp;
+    leaf.hash = HashOp.SHA256;
+    leaf.prehashKey = HashOp.NO_HASH;
+    leaf.prehashValue = HashOp.SHA256;
+    leaf.length = LengthOp.NO_PREFIX;
+    leaf.prefix = [0];
+
+    auto inner = new InnerSpec;
+    inner.childOrder = [0, 1];
+    inner.minPrefixLength = 1;
+    inner.maxPrefixLength = 1;
+    inner.childSize = 32;
+    inner.emptyChild = [0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0];
+    inner.hash = HashOp.SHA256;
+
+    auto spec = new ProofSpec;
+    spec.leafSpec = leaf;
+    spec.innerSpec = inner;
+    spec.minDepth = 0;
+    spec.maxDepth = 0;
+    return spec;
+}
+
 private:
 
 ExistenceProof getExistProof(CommitmentProof proof, const(ubyte)[] key)
@@ -291,5 +319,30 @@ unittest
     {
         auto spec = tendermintSpec();
         verifyTestData("testdata/tendermint/nonexist_middle.json", spec);
+    }
+
+    {
+        auto spec = smtSpec();
+        verifyTestData("testdata/smt/exist_left.json", spec);
+    }
+    {
+        auto spec = smtSpec();
+        verifyTestData("testdata/smt/exist_right.json", spec);
+    }
+    {
+        auto spec = smtSpec();
+        verifyTestData("testdata/smt/exist_middle.json", spec);
+    }
+    {
+        auto spec = smtSpec();
+        verifyTestData("testdata/smt/nonexist_left.json", spec);
+    }
+    {
+        auto spec = smtSpec();
+        verifyTestData("testdata/smt/nonexist_right.json", spec);
+    }
+    {
+        auto spec = smtSpec();
+        verifyTestData("testdata/smt/nonexist_middle.json", spec);
     }
 }
