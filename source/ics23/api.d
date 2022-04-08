@@ -267,4 +267,29 @@ unittest
         auto spec = iavlSpec();
         verifyTestData("testdata/iavl/nonexist_middle.json", spec);
     }
+
+    {
+        auto spec = tendermintSpec();
+        verifyTestData("testdata/tendermint/exist_left.json", spec);
+    }
+    {
+        auto spec = tendermintSpec();
+        verifyTestData("testdata/tendermint/exist_right.json", spec);
+    }
+    {
+        auto spec = tendermintSpec();
+        verifyTestData("testdata/tendermint/exist_middle.json", spec);
+    }
+    {
+        auto spec = tendermintSpec();
+        verifyTestData("testdata/tendermint/nonexist_left.json", spec);
+    }
+    {
+        auto spec = tendermintSpec();
+        verifyTestData("testdata/tendermint/nonexist_right.json", spec);
+    }
+    {
+        auto spec = tendermintSpec();
+        verifyTestData("testdata/tendermint/nonexist_middle.json", spec);
+    }
 }
