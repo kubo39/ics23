@@ -20,9 +20,7 @@ void verifyExistence(
     checkExistenceSpec(proof, spec);
     enforce(proof.key == key, "Provided key doesn't match proof");
     enforce(proof.value == value, "Provided value doesn't match proof");
-
-    const calc = calculateExistenceRoot(proof);
-    enforce(calc == root, "Root hash dosen't match");
+    enforce(calculate(proof) == root, "Root hash dosen't match");
 }
 
 void verifyNonExistence(
@@ -68,7 +66,7 @@ void verifyNonExistence(
 }
 
 // Calculate determines the root hash that matches the given proof.
-CommitmentRoot calculateExistenceRoot(ExistenceProof proof) @trusted
+CommitmentRoot calculate(ExistenceProof proof) @trusted
 {
     enforce(proof.key.length, "Existence proof must have key set");
     enforce(proof.value.length, "Existence proof must have value set");
@@ -93,7 +91,7 @@ unittest
         proof.leaf = leaf;
 
         auto expected = hexString!"b68f5d298e915ae1753dd333da1f9cf605411a5f2e12516be6758f365e6db265";
-        assert(expected == calculateExistenceRoot(proof));
+        assert(expected == calculate(proof));
     }
     {
         auto leaf = new LeafOp;
@@ -113,7 +111,7 @@ unittest
         proof.path = [inner];
 
         auto expected = hexString!"836ea236a6902a665c2a004c920364f24cad52ded20b1e4f22c3179bfe25b2a9";
-        assert(expected == calculateExistenceRoot(proof));
+        assert(expected == calculate(proof));
     }
 }
 
@@ -125,12 +123,12 @@ class InvalidMerkleProof : Exception
     }
 }
 
-CommitmentRoot calculateNonExistenceRoot(NonExistenceProof proof) @trusted
+CommitmentRoot calculate(NonExistenceProof proof) @trusted
 {
     if (proof.left !is null)
-        return calculateExistenceRoot(proof.left);
+        return calculate(proof.left);
     if (proof.right !is null)
-        return calculateExistenceRoot(proof.right);
+        return calculate(proof.right);
     throw new InvalidMerkleProof("Nonexistence proof has emptt left and right proof.");
 }
 
