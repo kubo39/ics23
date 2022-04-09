@@ -41,8 +41,6 @@ bool verifyBatchMembership(
     CommitmentRoot root,
     const(ubyte)[][const(ubyte)[]] items) @trusted
 {
-    import std.algorithm : all;
-
     auto proof = isCompressed(_proof)
         ? decompress(_proof)
         : _proof;
@@ -58,8 +56,6 @@ bool verifyBatchNonMembership(
     CommitmentRoot root,
     const(ubyte)[][] keys) @trusted
 {
-    import std.algorithm : all;
-
     auto proof = isCompressed(_proof)
         ? decompress(_proof)
         : _proof;
