@@ -129,7 +129,7 @@ CommitmentRoot calculate(NonExistenceProof proof) @trusted
         return calculate(proof.left);
     if (proof.right !is null)
         return calculate(proof.right);
-    throw new InvalidMerkleProof("Nonexistence proof has emptt left and right proof.");
+    throw new InvalidMerkleProof("Nonexistence proof has empty left and right proof.");
 }
 
 private:
