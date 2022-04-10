@@ -70,9 +70,9 @@ CommitmentRoot calculate(ExistenceProof proof) @trusted
 {
     enforce(proof.key.length, "Existence proof must have key set");
     enforce(proof.value.length, "Existence proof must have value set");
-    auto hash = applyLeaf(proof.leaf, proof.key, proof.value);
+    auto hash = apply(proof.leaf, proof.key, proof.value);
     foreach (step; proof.path)
-        hash = applyInner(step, hash);
+        hash = apply(step, hash);
     return hash;
 }
 
