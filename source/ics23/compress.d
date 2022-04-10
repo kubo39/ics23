@@ -15,24 +15,13 @@ CommitmentProof compress(CommitmentProof proof) @trusted
     switch (proof.proofCase)
     {
     case CommitmentProof.ProofCase.batch:
-        return compressBatch(proof._batch);
+        return compress(proof._batch);
     default:
         return proof;
     }
 }
 
-CommitmentProof decompress(CommitmentProof proof) @trusted
-{
-    switch (proof.proofCase)
-    {
-    case CommitmentProof.ProofCase.compressed:
-        return decompressBatch(proof._compressed);
-    default:
-        return proof;
-    }
-}
-
-CommitmentProof compressBatch(BatchProof proof) @trusted
+CommitmentProof compress(BatchProof proof) @trusted
 {
     CompressedBatchEntry[] entries;
     InnerOp[] lookup;
@@ -42,7 +31,7 @@ CommitmentProof compressBatch(BatchProof proof) @trusted
         final switch (entry.proofCase)
         {
         case BatchEntry.ProofCase.exist:
-            auto exist = compressExist(entry._exist, lookup, registry);
+            auto exist = compress(entry._exist, lookup, registry);
             auto compressed = new CompressedBatchEntry;
             compressed._proofCase = CompressedBatchEntry.ProofCase.exist;
             compressed._exist = exist;
@@ -50,8 +39,8 @@ CommitmentProof compressBatch(BatchProof proof) @trusted
             break;
         case BatchEntry.ProofCase.nonexist:
             auto non = entry._nonexist;
-            auto left = compressExist(non.left, lookup, registry);
-            auto right = compressExist(non.right, lookup, registry);
+            auto left = compress(non.left, lookup, registry);
+            auto right = compress(non.right, lookup, registry);
             auto nonexist = new CompressedNonExistenceProof;
             nonexist.key = non.key;
             nonexist.left = left;
@@ -75,7 +64,7 @@ CommitmentProof compressBatch(BatchProof proof) @trusted
     return commitmentProof;
 }
 
-CompressedExistenceProof compressExist(
+CompressedExistenceProof compress(
     ExistenceProof exist,
     InnerOp[] lookup,
     int[const(ubyte)[]] registry) @trusted
@@ -106,7 +95,18 @@ CompressedExistenceProof compressExist(
     return proof;
 }
 
-CommitmentProof decompressBatch(CompressedBatchProof proof) @trusted
+CommitmentProof decompress(CommitmentProof proof) @trusted
+{
+    switch (proof.proofCase)
+    {
+    case CommitmentProof.ProofCase.compressed:
+        return decompress(proof._compressed);
+    default:
+        return proof;
+    }
+}
+
+CommitmentProof decompress(CompressedBatchProof proof) @trusted
 {
     auto lookup = proof.lookupInners;
     auto entries = proof
@@ -115,15 +115,15 @@ CommitmentProof decompressBatch(CompressedBatchProof proof) @trusted
                 final switch (compressedEntry.proofCase)
                 {
                 case CompressedBatchEntry.ProofCase.exist:
-                    auto exist = decompressExist(compressedEntry._exist, lookup);
+                    auto exist = decompress(compressedEntry._exist, lookup);
                     auto entry = new BatchEntry;
                     entry._proofCase = BatchEntry.ProofCase.exist;
                     entry._exist = exist;
                     return entry;
                 case CompressedBatchEntry.ProofCase.nonexist:
                     auto non = compressedEntry._nonexist;
-                    auto left = decompressExist(non.left, lookup);
-                    auto right = decompressExist(non.right, lookup);
+                    auto left = decompress(non.left, lookup);
+                    auto right = decompress(non.right, lookup);
                     auto nonexist = new NonExistenceProof;
                     nonexist.key = non.key;
                     nonexist.left = left;
@@ -146,7 +146,7 @@ CommitmentProof decompressBatch(CompressedBatchProof proof) @trusted
     return commitmentProof;
 }
 
-ExistenceProof decompressExist(CompressedExistenceProof exist, InnerOp[] lookup) @trusted
+ExistenceProof decompress(CompressedExistenceProof exist, InnerOp[] lookup) @trusted
 {
     auto path = exist
         .path
