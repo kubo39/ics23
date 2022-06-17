@@ -1,4 +1,5 @@
 .dub
+.gdb_history
 docs.json
 __dummy.html
 docs/
@@ -15,3 +16,4 @@ libics23.a
 *.o
 *.obj
 *.lst
+*~undo-tree~

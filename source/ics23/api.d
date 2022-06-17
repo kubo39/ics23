@@ -73,6 +73,7 @@ ProofSpec iavlSpec() @trusted
     leaf.prehashKey = HashOp.NO_HASH;
     leaf.prehashValue = HashOp.SHA256;
     leaf.length = LengthOp.VAR_PROTO;
+    leaf.prefix = [0];
 
     auto inner = new InnerSpec;
     inner.childOrder = [0, 1];
@@ -98,6 +99,7 @@ ProofSpec tendermintSpec() @trusted
     leaf.prehashKey = HashOp.NO_HASH;
     leaf.prehashValue = HashOp.SHA256;
     leaf.length = LengthOp.VAR_PROTO;
+    leaf.prefix = [0];
 
     auto inner = new InnerSpec;
     inner.childOrder = [0, 1];
@@ -147,7 +149,7 @@ private:
 
 ExistenceProof getExistProof(CommitmentProof proof, const(ubyte)[] key) @trusted
 {
-    final switch (proof.proofCase)
+    switch (proof.proofCase)
     {
     case CommitmentProof.ProofCase.exist:
         return proof._exist;
@@ -165,6 +167,8 @@ ExistenceProof getExistProof(CommitmentProof proof, const(ubyte)[] key) @trusted
     case CommitmentProof.ProofCase.nonexist:
     case CommitmentProof.ProofCase.compressed:
         return null;
+    default:
+        assert(false);
     }
 }
 
@@ -197,35 +201,32 @@ NonExistenceProof getNonexistProof(CommitmentProof proof, const(ubyte)[] key) @t
 unittest
 {
     import std.file;
+    import std.format : format;
     import std.json;
     import std.meta : AliasSeq;
     import std.typecons;
 
-    // stolen from phobos.
-    auto hexStrLiteral(string hexData)
+    auto hexDecode(string hexData)
     {
-        import std.ascii : isHexDigit;
-        char[] result;
-        result.length = 1 + hexData.length * 2 + 1;
-        auto r = result.ptr;
-        r[0] = '"';
-        size_t cnt = 0;
-        foreach (c; hexData)
+        ubyte val(char c)
         {
-            if (c.isHexDigit)
+            switch (c)
             {
-                if ((cnt & 1) == 0)
-                {
-                    r[1 + cnt]     = '\\';
-                    r[1 + cnt + 1] = 'x';
-                    cnt += 2;
-                }
-                r[1 + cnt] = c;
-                ++cnt;
+            case 'A': .. case 'F': return cast(ubyte) (c - 'A' + 10);
+            case 'a': .. case 'f': return cast(ubyte) (c - 'a' + 10);
+            case '0': .. case '9': return cast(ubyte) (c - '0');
+            default: assert(false);
             }
         }
-        r[1 + cnt] = '"';
-        result.length = 1 + cnt + 1;
+
+        assert(hexData.length % 2 == 0);
+        ubyte[] result;
+        size_t cnt = 0;
+        auto p = hexData.ptr;
+        for (size_t i = 0; i < hexData.length; i += 2)
+        {
+            result ~= cast(ubyte) (val(p[i]) << 4 | val(p[i + 1]));
+        }
         return result;
     }
 
@@ -238,16 +239,18 @@ unittest
 
     auto loadFile(string filename)
     {
+        import google.protobuf;
+
         auto contents = readText(filename);
         JSONValue data = parseJSON(contents);
-        auto protoBin = hexStrLiteral(data["proof"].str);
-        auto commitmentProof = new CommitmentProof;
+        auto protoBin = hexDecode(data["proof"].str);
+        auto commitmentProof = protoBin.fromProtobuf!CommitmentProof;
         RefData refData;
-        refData.root = cast(ubyte[]) hexStrLiteral(data["root"].str);
-        refData.key = cast(ubyte[]) hexStrLiteral(data["key"].str);
+        refData.root = hexDecode(data["root"].str);
+        refData.key = hexDecode(data["key"].str);
         if (const(JSONValue)* value = "value" in data)
         {
-            refData.value = cast(ubyte[]) hexStrLiteral(value.str);
+            refData.value = hexDecode(value.str);
         }
         return tuple(commitmentProof, refData);
     }
@@ -257,41 +260,34 @@ unittest
         CommitmentProof proof;
         RefData data;
         AliasSeq!(proof, data) = loadFile(filename);
+
         if (data.value !is null)
         {
-            verifyMembership(proof, spec, data.root, data.key, data.value);
+            assert(verifyMembership(proof, spec, data.root, data.key, data.value), filename);
         }
         else
         {
-            verifyNonMembership(proof, spec, data.root, data.key);
+            assert(verifyNonMembership(proof, spec, data.root, data.key), filename);
         }
     }
 
+    // iavl spec.
     {
-        auto spec = iavlSpec();
-        verifyTestData("testdata/iavl/exist_left.json", spec);
-    }
-    {
-        auto spec = iavlSpec();
-        verifyTestData("testdata/iavl/exist_right.json", spec);
-    }
-    {
-        auto spec = iavlSpec();
-        verifyTestData("testdata/iavl/exist_middle.json", spec);
-    }
-    {
-        auto spec = iavlSpec();
-        verifyTestData("testdata/iavl/nonexist_left.json", spec);
-    }
-    {
-        auto spec = iavlSpec();
-        verifyTestData("testdata/iavl/nonexist_right.json", spec);
-    }
-    {
-        auto spec = iavlSpec();
-        verifyTestData("testdata/iavl/nonexist_middle.json", spec);
+        string[] iavlTestCases = [
+            "testdata/iavl/exist_left.json",
+            "testdata/iavl/exist_right.json",
+            "testdata/iavl/exist_middle.json",
+            "testdata/iavl/nonexist_left.json",
+            "testdata/iavl/nonexist_right.json",
+            "testdata/iavl/nonexist_middle.json"
+            ];
+        foreach (testCase; iavlTestCases)
+        {
+            verifyTestData(testCase, iavlSpec());
+        }
     }
 
+    // tendermint spec.
     {
         auto spec = tendermintSpec();
         verifyTestData("testdata/tendermint/exist_left.json", spec);
@@ -317,6 +313,7 @@ unittest
         verifyTestData("testdata/tendermint/nonexist_middle.json", spec);
     }
 
+    // smt spec.
     {
         auto spec = smtSpec();
         verifyTestData("testdata/smt/exist_left.json", spec);

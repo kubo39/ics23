@@ -37,7 +37,7 @@ void verifyNonExistence(
     if (proof.right !is null)
     {
         verifyExistence(proof.right, spec, root, proof.right.key, proof.right.value);
-        enforce(key > proof.right.key, "right key isn't after key");
+        enforce(key < proof.right.key, "right key isn't after key");
     }
     enforce(spec.innerSpec !is null, "Inner spec missing");
 
@@ -168,12 +168,14 @@ unittest
     validLeaf.prehashKey = HashOp.NO_HASH;
     validLeaf.prehashValue = HashOp.SHA256;
     validLeaf.length = LengthOp.VAR_PROTO;
+    validLeaf.prefix = [0];
 
     auto invalidLeaf = new LeafOp;
     invalidLeaf.hash = HashOp.SHA512;
     invalidLeaf.prehashKey = HashOp.NO_HASH;
     invalidLeaf.prehashValue = HashOp.NO_HASH;
     invalidLeaf.length = LengthOp.VAR_PROTO;
+    invalidLeaf.prefix = [0];
 
     auto validInner = new InnerOp;
     validInner.hash = HashOp.SHA256;
@@ -278,11 +280,11 @@ unittest
 
 void ensureLeaf(LeafOp leaf, LeafOp leafSpec) pure @safe
 {
-    enforce(leaf.hash == leafSpec.hash, format!"Unexpected hashOp: %s"(leaf.hash));
-    enforce(leaf.prehashKey == leafSpec.prehashKey, format!"Unexpected prehashKey: %s"(leaf.prehashKey));
-    enforce(leaf.prehashValue == leafSpec.prehashValue, format!"Unexpected prehashValue: %s"(leaf.prehashValue));
-    enforce(leaf.length == leafSpec.length, format!"Unexpected lengthOp: %s"(leaf.length));
-    enforce(hasPrefix(leaf.prefix, leafSpec.prefix), format!"Incorrect prefix on leaf: %s"(leaf.prefix));
+    enforce(leafSpec.hash == leaf.hash , format!"Unexpected hashOp: %s"(leaf.hash));
+    enforce(leafSpec.prehashKey == leaf.prehashKey, format!"Unexpected prehashKey: %s"(leaf.prehashKey));
+    enforce(leafSpec.prehashValue == leaf.prehashValue, format!"Unexpected prehashValue: %s"(leaf.prehashValue));
+    enforce(leafSpec.length == leaf.length, format!"Unexpected lengthOp: %s"(leaf.length));
+    enforce(hasPrefix(leafSpec.prefix, leaf.prefix), format!"Incorrect prefix on leaf: %s"(leaf.prefix));
 }
 
 bool hasPrefix(bytes prefix, bytes data) @nogc nothrow pure @safe
@@ -327,36 +329,36 @@ void ensureRightMost(InnerSpec spec, InnerOp[] path) pure @trusted
 void ensureLeftNeighbor(
     InnerSpec spec,
     InnerOp[] left,
-    InnerOp[] right) pure @trusted
+    InnerOp[] right) @trusted
 {
     import std.range;
 
-    auto leftq = left.dup;
-    auto rightq = right.dup;
+    auto left2 = left.dup;
+    auto right2 = right.dup;
 
-    auto leftqTop = leftq.front;
-    leftq.popFront;
-    auto rightqTop = rightq.front;
-    rightq.popFront;
+    auto topLeft = left2.front;
+    left2.popFront;
+    auto topRight = right2.front;
+    right2.popFront;
 
-    while (leftqTop.prefix == rightqTop.prefix && leftqTop.suffix == rightqTop.suffix)
+    while (topLeft.prefix == topRight.prefix && topLeft.suffix == topRight.suffix)
     {
-        leftqTop = leftq.front;
-        leftq.popFront;
-        rightqTop = rightq.front;
-        rightq.popFront;
+        topLeft = left2.front;
+        left2.popFront;
+        topRight = right2.front;
+        right2.popFront;
     }
 
-    enforce(isLeftStep(spec, leftqTop, rightqTop), "Not left neighbor at first divergent step");
+    enforce(isLeftStep(spec, topLeft, topRight), "Not left neighbor at first divergent step");
 
-    ensureRightMost(spec, leftq);
-    ensureLeftMost(spec, rightq);
+    ensureRightMost(spec, left2);
+    ensureLeftMost(spec, right2);
 }
 
 bool isLeftStep(
     InnerSpec spec,
     InnerOp left,
-    InnerOp right) pure @trusted
+    InnerOp right) @trusted
 {
     const leftIdx = orderFromPadding(spec, left);
     const rightIdx = orderFromPadding(spec, right);
